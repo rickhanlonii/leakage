@@ -90,16 +90,28 @@ Fortunately there is a fix: You need to install and use version `4.8` of `g++` i
 Have a look at leakage's [.travis.yml](./.travis.yml) file to see how it can be done or find further details by @btmills in this [issue](https://github.com/andywer/leakage/issues/4#issuecomment-269449814).
 
 
+## You might want to know
+
+<details>
+<summary>Can I test asynchronous code?</summary>
+Unfortunately not yet. Right now you can only test synchronous code, but we are [already working on it](https://github.com/andywer/leakage/issues/7) 😉
+</details>
+
+<details>
+<summary>I encountered a timeout error</summary>
+If you see an error like `Error: Timeout of 2000ms exceeded. (...)` it means that your test took so long that the test runner cancelled it. There are two ways to deal with this:
+
+You might increase the timeout. Have a look at your test runner's documentation for that. When using Mocha, for instance, you can run it with `--timeout 5000` to increase the timeout to 5000ms (5s).
+
+The other solution is to make the tests run faster. Leakage tests are rather slow compared to usual unit tests, since heap snapshotting and diffing takes a little time and has to be done several times per test. Nevertheless you can try to reduce the iteration count (the first parameter passed to `iterate()`). If you use 100 iterations as in the sample, try 30 iterations instead.
+</details>
+
+
 ## Feedback
 
 Got any feedback, suggestions, ...? Feel free to open an [issue](https://github.com/andywer/leakage/issues) and share your thoughts!
 
 Have an improvement? Open a pull request any time.
-
-
-## To Do
-
-* Support async functions (a.k.a. Promise support)
 
 
 ## License
