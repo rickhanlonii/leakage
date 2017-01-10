@@ -94,11 +94,13 @@ Have a look at leakage's [.travis.yml](./.travis.yml) file to see how it can be 
 
 <details>
 <summary>Can I test asynchronous code?</summary>
+
 Unfortunately not yet. Right now you can only test synchronous code, but we are [already working on it](https://github.com/andywer/leakage/issues/7) 😉
 </details>
 
 <details>
 <summary>I encountered a timeout error</summary>
+
 If you see an error like `Error: Timeout of 2000ms exceeded. (...)` it means that your test took so long that the test runner cancelled it. There are two ways to deal with this:
 
 You might increase the timeout. Have a look at your test runner's documentation for that. When using Mocha, for instance, you can run it with `--timeout 5000` to increase the timeout to 5000ms (5s).
