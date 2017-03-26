@@ -54,6 +54,9 @@ export default class LeakageRunner {
   }
 
   iterationBlockDone (error, iteratorIsAsync) {
+    // Seems to work better with multiple GCs. Maybe `memwatch.gc()` only triggers a partial GC...
+    memwatch.gc()
+    memwatch.gc()
     memwatch.gc()
     this.heapDiffs.push(this.currentHeapDiff.end())
     this.iteratorIsAsync = iteratorIsAsync
