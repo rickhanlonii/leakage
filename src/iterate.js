@@ -9,7 +9,6 @@ let runningLeakTests = 0
 export default function iterate (iterationCount, iteratorFunc) {
   let error = null
   let onDoneHasRun = false
-  let syncHasRun = false
   let onAsyncCompletion = () => {}
 
   const runner = new LeakageRunner(iterationCount, iteratorFunc, onDone)
@@ -28,8 +27,6 @@ export default function iterate (iterationCount, iteratorFunc) {
 
   runningLeakTests++
   runner.iterate()
-
-  syncHasRun = true
 
   if (onDoneHasRun) {
     // Iteration performed synchronously
