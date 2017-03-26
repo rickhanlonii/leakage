@@ -1,52 +1,50 @@
-import memwatch from 'memwatch-next'
-import getSubsequentHeapGrowths from './getSubsequentHeapGrowths'
-import createLeakErrorFactory from './leakErrorFactory'
-import saveHeapDiffs from './saveHeapDiffs'
+import LeakageRunner from './LeakageRunner'
+
+let runningLeakTests = 0
 
 /**
  * @param {number} iterationCount
  * @param {Function} iteratorFunc
  */
 export default function iterate (iterationCount, iteratorFunc) {
-  const garbageCollections = 6
-  const throwOnSubsequentHeapGrows = 4
-  iterationCount = iterationCount > garbageCollections ? iterationCount : garbageCollections
+  let error = null
+  let onDoneHasRun = false
+  let syncHasRun = false
+  let onAsyncCompletion = () => {}
 
-  const iterationBlocks = createIterationBlocks(iterationCount, garbageCollections)
-  const heapDiffs = []
+  const runner = new LeakageRunner(iterationCount, iteratorFunc, onDone)
 
-  memwatch.gc()
-
-  iterationBlocks.forEach(({ from, to }) => {
-    const heapDiff = new memwatch.HeapDiff()
-    for (let iterationNo = from; iterationNo <= to; iterationNo++) {
-      iteratorFunc()
-    }
-    memwatch.gc()
-    heapDiffs.push(heapDiff.end())
-  })
-
-  saveHeapDiffs(heapDiffs, throwOnSubsequentHeapGrows)
-
-  const subsequentHeapGrowths = getSubsequentHeapGrowths(heapDiffs)
-
-  if (subsequentHeapGrowths.length >= throwOnSubsequentHeapGrows) {
-    const newHeapError = createLeakErrorFactory(iterationCount, iterationBlocks.length)
-    throw newHeapError(subsequentHeapGrowths)
+  function onDone (iterationError) {
+    error = iterationError
+    runningLeakTests--
+    onDoneHasRun = true
+    runner.destruct()
+    onAsyncCompletion(iterationError)
   }
-}
 
-/**
- * Split complete iteration into multiple chunks.
- */
-function createIterationBlocks (totalIterations, blocksToCreate) {
-  return createArray(blocksToCreate)
-    .map((blockIndex) => ({
-      from: Math.round(blockIndex / blocksToCreate * totalIterations),
-      to: Math.round((blockIndex + 1) / blocksToCreate * totalIterations) - 1
-    }))
-}
+  if (runningLeakTests > 0) {
+    throw new Error(`Multiple concurrent leak tests running. This will ruin the heap diffs. Make sure the tests are run strictly sequential.`)
+  }
 
-function createArray (itemCount) {
-  return Array.apply(null, { length: itemCount }).map((_, index) => index)
+  runningLeakTests++
+  runner.iterate()
+
+  syncHasRun = true
+
+  if (onDoneHasRun) {
+    // Iteration performed synchronously
+    if (error) {
+      throw error
+    }
+  } else {
+    return new Promise((resolve, reject) => {
+      onAsyncCompletion = error => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve()
+        }
+      }
+    })
+  }
 }
