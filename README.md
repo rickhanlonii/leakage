@@ -27,8 +27,8 @@ import myLib from 'my-lib'
 import { iterate } from 'leakage'
 
 describe('myLib', () => {
-  it('does not leak when doing stuff 1k times', () => {
-    iterate(1000, () => {
+  it('does not leak when doing stuff 100 times', () => {
+    iterate(100, () => {
       const instance = myLib.createInstance()
       instance.doStuff('foo', 'bar')
     })
@@ -48,8 +48,8 @@ import test from 'ava'
 import myLib from 'my-lib'
 import { iterate } from 'leakage'
 
-test('myLib does not leak when doing stuff 1k times', () => {
-  iterate(1000, () => {
+test('myLib does not leak when doing stuff 100 times', () => {
+  iterate(100, () => {
     const instance = myLib.createInstance()
     instance.doStuff('foo', 'bar')
   })
@@ -59,6 +59,25 @@ test('myLib does not leak when doing stuff 1k times', () => {
 `iterate()` will run the arrow function 1000 times and throw an error if a memory leak has been detected.
 
 **Make sure you run all tests serially** in order to get clean heap diffs. Tape should run them sequentially by default. Use `--serial` for AVA.
+
+
+## Asynchronous tests
+
+The `iterate` function will recognize if your iterator function returns a promise and will then return a promise itself. In case of a memory leak that returned promise will be rejected instead of `iterate` failing synchronously.
+
+```js
+import fetch from 'isomorphic-fetch'
+import { iterate } from 'leakage'
+
+describe('Fetch API', () => {
+  it('does not leak when requesting data and parsing JSON', () => {
+    iterate(100, async () => {
+      const response = await fetch()
+      await response.json()
+    })
+  })
+})
+```
 
 
 ## CLI parameters
@@ -91,12 +110,6 @@ Have a look at leakage's [.travis.yml](./.travis.yml) file to see how it can be 
 
 
 ## You might want to know
-
-<details>
-<summary>Can I test asynchronous code?</summary>
-
-Unfortunately not yet. Right now you can only test synchronous code, but we are [already working on it](https://github.com/andywer/leakage/issues/7) 😉
-</details>
 
 <details>
 <summary>I encountered a timeout error</summary>
