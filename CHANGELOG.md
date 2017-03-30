@@ -1,5 +1,9 @@
 # Leakage - Changelog
 
+## v0.3.0
+
+- Support for asynchronous tests ([#7](https://github.com/andywer/leakage/issues/7))
+
 ## v0.2.0
 
 - Added simple integration test and Travis CI config
